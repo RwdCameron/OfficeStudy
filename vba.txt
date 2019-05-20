@@ -1,0 +1,131 @@
+=IF(AU6="否",0,IF(NETWORKDAYS(本月计薪日期,Q6)<=21,(S6+T6-AB6-AC6)/计薪天数*(NETWORKDAYS(本月计薪日期,Q6)-1),(S6+T6-AB6-AC6)/计薪天数*(本月规定上班天数-NETWORKDAYS(Q6,本月计薪日期))))
+
+=IF(AU6="否",0,IF(NETWORKDAYS(本月计薪日期,Q6)<=21,(S6+T6-AB6-AC6)/计薪天数*(NETWORKDAYS(本月计薪日期,Q6)-1),(S6+T6-AB6-AC6)/计薪天数*(本月规定上班天数-NETWORKDAYS(Q6,本月计薪日期))))
+
+Sub 点我_Click()
+sheetname = InputBox("麻烦输入一下要弄的sheet页名")
+If sheetname = "" Then
+MsgBox "啥都没输入，那好吧，退出了。。。"
+Exit Sub
+End If
+Dim srcsheet  As Worksheet
+Dim distsheet As Worksheet
+Set srcsheet = Worksheets(sheetname)
+ActiveWorkbook.Sheets.Add After:=Worksheets(Worksheets.count)
+Set distsheet = Worksheets(Worksheets.count)
+distsheet.name = sheetname + "处理后的"
+Dim rowcount As Integer
+rowcount = 0
+
+For i = 4 To 65536
+If srcsheet.Rows.Cells(i, 2) = "" Then Exit For
+If Not srcsheet.Rows.Cells(i, 6) = "" Then
+finded = findName(distsheet, i, srcsheet.Rows.Cells(i, 2))
+If Not finded = -1 Then
+distsheet.Rows.Cells(finded, 4) = distsheet.Rows.Cells(finded, 4) + "/" + srcsheet.Rows.Cells(i, 4)
+Else
+distsheet.Rows.Cells(i, 2) = srcsheet.Rows.Cells(i, 2)
+distsheet.Rows.Cells(i, 3) = srcsheet.Rows.Cells(i, 3)
+distsheet.Rows.Cells(i, 4) = srcsheet.Rows.Cells(i, 4)
+End If
+End If
+rowcount = i
+
+Next
+For i = 4 To rowcount
+If distsheet.Rows.Cells(i, 2) = "" Then
+distsheet.Rows(i).Delete
+End If
+Next
+End Sub
+
+Function findName(dist As Worksheet, count, name As String)
+For i = 4 To count
+Dim ret As Integer
+ret = -1
+If dist.Rows.Cells(i, 2) = name Then
+ret = i
+Exit For
+End If
+Next
+findName = ret
+End Function
+
+
+For i = 4 To rowcount
+If distsheet.Rows.Cells(i, 2) = "" Then
+distsheet.Rows(i).Delete
+End If
+Next
+
+Sub 按钮1_Click()
+For i = 2 To 1000
+If Sheet1.Cells(i, 3) = "" Then Exit For
+progressBarShow Int(i), 10
+Dim bodyTpl
+bodyTpl = Sheet3.Cells(3, 2)
+Dim body As String
+body = Replace(bodyTpl, "$1$", Sheet1.Cells(i, 4))
+body = Replace(body, "$2$", Sheet3.Cells(4, 2))
+body = Replace(body, "$3$", Sheet3.Cells(5, 2))
+body = Replace(body, "$4$", Sheet1.Cells(i, 3))
+body = Replace(body, "$5$", Sheet1.Cells(i, 4))
+body = Replace(body, "$6$", Sheet1.Cells(i, 6))
+body = Replace(body, "$7$", Sheet1.Cells(i, 7))
+body = Replace(body, "$8$", Sheet1.Cells(i, 9))
+body = Replace(body, "$9$", Sheet1.Cells(i, 8))
+body = Replace(body, "$10$", Sheet1.Cells(i, 10))
+body = Replace(body, "$11$", Sheet1.Cells(i, 11))
+body = Replace(body, "$12$", Sheet1.Cells(i, 13))
+body = Replace(body, "$13$", Sheet1.Cells(i, 12))
+body = Replace(body, "$14$", "0")
+body = Replace(body, "$15$", Sheet1.Cells(i, 15))
+body = Replace(body, "$16$", Sheet1.Cells(i, 27))
+body = Replace(body, "$17$", Sheet1.Cells(i, 19))
+body = Replace(body, "$18$", Sheet1.Cells(i, 21))
+body = Replace(body, "$19$", Sheet1.Cells(i, 20))
+body = Replace(body, "$20$", Sheet1.Cells(i, 23))
+body = Replace(body, "$21$", Sheet1.Cells(i, 22))
+body = Replace(body, "$22$", Sheet1.Cells(i, 18))
+body = Replace(body, "$23$", Sheet1.Cells(i, 17))
+body = Replace(body, "$24$", Sheet1.Cells(i, 16))
+body = Replace(body, "$25$", Sheet1.Cells(i, 26))
+body = Replace(body, "$26$", Sheet1.Cells(i, 24))
+body = Replace(body, "$27$", Sheet1.Cells(i, 28))
+Dim CDO
+Set CDO = CreateObject("CDO.Message")
+CDO.Subject = "工资明细"
+CDO.From = Sheet3.Cells(1, 2)
+CDO.To = Sheet1.Cells(i, 31)
+CDO.HTMLBody = body
+Const schema = "http://schemas.microsoft.com/cdo/configuration/"
+With CDO.Configuration.Fields
+    .Item(schema & "sendusing") = 2
+    .Item(schema & "smtpserver") = "smtp.qiye.163.com"
+    .Item(schema & "smtpauthenticate") = 1
+    .Item(schema & "sendusername") = Sheet3.Cells(1, 2)
+    .Item(schema & "sendpassword") = Sheet3.Cells(2, 2)
+    .Item(schema & "smtpserverport") = 465
+    .Item(schema & "smtpusessl") = True
+    .Item(schema & "smtpconnectiontimeout") = 60
+    .Update
+End With
+CDO.Send
+Next
+ProgressBar.Hide
+End Sub
+
+Function progressBarShow(n As Integer, total As Integer)
+On Error GoTo err
+    With ProgressBar
+        .Show 0
+        .Label1.Width = Int(n / total * 462)
+        .Label2.Caption = CStr(Int(n / total * 100)) + "%"
+        DoEvents
+    End With
+    If (n = total) Then ProgressBar.Hide
+thisEnd:
+    Exit Function
+err:
+    MsgBox (err.Description)
+End Function
